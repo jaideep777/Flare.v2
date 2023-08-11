@@ -10,28 +10,16 @@ namespace flare{
 template <class T>
 class GeoCube : public Tensor<T> {
 	public:
-	std::string name;       // Variable name
-	std::string unit;
-	std::vector <std::string> dimnames;
-	int unlim_idx = -1;
-	float scale_factor = 1.0, add_offset = 0.0; 
-	std::vector<std::vector<double>> coords;
-	std::vector<std::vector<double>> coords_trimmed;
+	VarMeta meta;
+
+	std::vector<std::vector<double>> coords, coords_trimmed;
 
 	int lon_idx, lat_idx, t_idx;
 
-	// data for standardizing dimension names (kept public to be editable)
-	std::vector<std::string>   t_names_try = {"time"};
-	std::vector<std::string> lev_names_try = {"lev", "level", "z"};
-	std::vector<std::string> lat_names_try = {"lat", "latitude", "y"};
-	std::vector<std::string> lon_names_try = {"lon", "longitude", "x"};
+	T scale_factor = 1.0, add_offset = 0.0; 
 
 	private:
 	netCDF::NcVar ncvar;
-	std::vector <size_t> dimsizes;
-	std::vector <std::string> dimunits;
-
-	std::map<std::string, std::string> renaming_map; // map used for renaming dimensions to standard names
 
 	std::vector <size_t> starts, counts;
 	std::vector <ptrdiff_t> strides;
@@ -42,57 +30,33 @@ class GeoCube : public Tensor<T> {
 	std::tm t_base = {};    // epoch used in file
 
 	public:
+
 	void readMeta(NcFilePP &in_file, std::string varname = ""){
 		// get the named variable, or the first variable in the file
-		if (varname != "") ncvar = in_file.vars_map.find(varname)->second;
-		else ncvar = in_file.vars_map.begin()->second;
-
-		// get variable name and dimensions
-		name = ncvar.getName();
-		std::vector <netCDF::NcDim> ncdims = ncvar.getDims();
-
-		// get names and sizes of dimensions for this variable
-		for (auto d : ncdims){
-			dimnames.push_back(d.getName());
-			dimsizes.push_back(d.getSize());
+		if (varname != ""){
+			ncvar = in_file.vars_map.at(varname);
+		}
+		else{
+			varname = in_file.vars_map.begin()->first;
+			ncvar = in_file.vars_map.begin()->second;
 		}
 
-		// copy the coordinate vectors that were read during file reading
-		for (auto s : dimnames){
-			coords.push_back(in_file.coordvalues_map.at(s));
+		meta = in_file.vars.at(varname);
+		for (auto& d : meta.dimnames){
+			coords.push_back(in_file.coords.at(d).values);
 		}
 		coords_trimmed = coords;
 
-		// ~~ standardize dimension names ~~
-		// 1. create renaming map
-		for (auto s :   t_names_try) renaming_map[s] = "time";
-		for (auto s : lev_names_try) renaming_map[s] = "lev";
-		for (auto s : lat_names_try) renaming_map[s] = "lat";
-		for (auto s : lon_names_try) renaming_map[s] = "lon";
-
-		for (auto& dname : dimnames){
-			// 2. convert to lowecase
-			std::transform(dname.begin(), dname.end(), dname.begin(),
-						[](unsigned char c){ return std::tolower(c); });
-			// 3. rename to standard name
-			if (renaming_map.find(dname) != renaming_map.end()){
-				dname = renaming_map[dname];
-			}
-		}
-
 		// ~~ Get the dimension indices. i.e., which index in ncdim std::vector is lat, lon, etc
-		lon_idx = std::find(dimnames.begin(), dimnames.end(), "lon") - dimnames.begin();
-		lat_idx = std::find(dimnames.begin(), dimnames.end(), "lat") - dimnames.begin();
-		if (lon_idx >= dimsizes.size() || lat_idx >= dimsizes.size()) throw std::runtime_error("Lat or Lon not found"); 
-		
-		// get unlimited dimension id
-		for (int i=0; i<ncdims.size(); ++i) if (ncdims[i].isUnlimited()) unlim_idx = i;
-	
+		lon_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lon") - meta.dimnames.begin();
+		lat_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lat") - meta.dimnames.begin();
+		if (lon_idx >= meta.dimsizes.size() || lat_idx >= meta.dimsizes.size()) throw std::runtime_error("Lat or Lon not found"); 
+			
 		// by default, set to read entire geographic extent at 1 timeslice 
-		starts.clear(); starts.resize(ncdims.size(), 0);   // set all starts to 0
-		counts = dimsizes;                                 // set all counts to dimension size (all elements)
-		strides.clear(); strides.resize(ncdims.size(), 1); // set all strides to 1
-		if (unlim_idx >=0) counts[unlim_idx] = 1;          // If there's an unlimited dimension, set that count to 1
+		starts.clear(); starts.resize(meta.dimnames.size(), 0);   // set all starts to 0
+		counts = meta.dimsizes;                                 // set all counts to dimension size (all elements)
+		strides.clear(); strides.resize(meta.dimnames.size(), 1); // set all strides to 1
+		if (meta.unlim_idx >=0) counts[meta.unlim_idx] = 1;          // If there's an unlimited dimension, set that count to 1
 
 		// Get basic variable attributes
 		// missing value
@@ -103,7 +67,7 @@ class GeoCube : public Tensor<T> {
 		}
 
 		// unit
-		try{ ncvar.getAtt("units").getValues(unit); }
+		try{ ncvar.getAtt("units").getValues(meta.unit); }
 		catch(netCDF::exceptions::NcException &e){ std::cout << "Warning: Variable does not have a unit\n";}
 
 		// scale factor
@@ -115,10 +79,10 @@ class GeoCube : public Tensor<T> {
 		catch(netCDF::exceptions::NcException &e){ add_offset = 0.f;}
 
 		// if the variable has a time dimension, then parse time units 
-		auto t_it = std::find(dimnames.begin(), dimnames.end(), "time");
-		if (t_it != dimnames.end()){
-			t_idx = t_it - dimnames.begin();
-			parse_time_unit(in_file);
+		auto t_it = std::find(meta.dimnames.begin(), meta.dimnames.end(), "time");
+		if (t_it != meta.dimnames.end()){
+			t_idx = t_it - meta.dimnames.begin();
+			parse_time_unit(in_file.coords.at("time").unit);
 		}
 		else{
 			t_idx = -1;
@@ -128,14 +92,14 @@ class GeoCube : public Tensor<T> {
 
 
 	void print(bool b_values = false){
-		std::cout << "Var: " << name << " (" << unit << ")\n";
-		std::cout << "   dim names: " << dimnames;
-		std::cout << "   dim sizes (original): " << dimsizes;
+		std::cout << "Var: " << meta.name << " (" << meta.unit << ")\n";
+		std::cout << "   dim names: " << meta.dimnames << '\n';
+		std::cout << "   dim sizes (original): " << meta.dimsizes << '\n';
 		std::cout << "      lat axis = " << lat_idx << "\n";
 		std::cout << "      lon axis = " << lon_idx << "\n";
 		std::cout << "      unlimited axis = ";
-		if (unlim_idx < 0) std::cout << "NA\n";
-		else std::cout << dimnames[unlim_idx] << " (" << unlim_idx << ")\n";
+		if (meta.unlim_idx < 0) std::cout << "NA\n";
+		else std::cout << meta.dimnames[meta.unlim_idx] << " (" << meta.unlim_idx << ")\n";
 		std::cout << "   missing value = " << this->missing_value << "\n";
 		std::cout << "   scale factor = " << scale_factor << "\n";
 		std::cout << "   add offset = " << add_offset << "\n";
@@ -143,12 +107,14 @@ class GeoCube : public Tensor<T> {
 		std::cout << "   tscale = " << tscale << " (" << tunit << ")\n";
 		std::cout << "   tstep = " << tstep << " days" << "\n";
 		std::cout << "   dimensions:\n";
-		for (int i=0; i<dimnames.size(); ++i){
-			std::cout << "      " << dimnames[i] << ": ";
-			if (coords_trimmed[i].size() <= 6) std::cout << coords_trimmed[i];
+		for (int i=0; i<meta.dimnames.size(); ++i){
+			std::cout << "      " << meta.dimnames[i] << ": ";
+			if (coords_trimmed[i].size() <= 6) std::cout << coords_trimmed[i] << '\n';
 			else{
-				std::cout << coords_trimmed[i].size() << " | " << coords_trimmed[i][0] << " " << coords_trimmed[i][1] << " " << coords_trimmed[i][2] << " ... " 
-				          << coords_trimmed[i][coords_trimmed[i].size()-3] << " " << coords_trimmed[i][coords_trimmed[i].size()-2] << " " << coords_trimmed[i][coords_trimmed[i].size()-1] << "\n";
+				auto& v = coords_trimmed[i];
+				size_t n = coords_trimmed[i].size();
+				std::cout << n << " | " << v[0] << " " << v[1] << " " << v[2] << " ... " 
+				          << v[n-3] << " " << v[n-2] << " " << v[n-1] << "\n";
 			}
 		}
 
@@ -187,11 +153,11 @@ class GeoCube : public Tensor<T> {
 	}
 
 	void readBlock(size_t unlim_start, size_t unlim_count){
-		if (unlim_idx >= 0){
-			starts[unlim_idx] = unlim_start;
-			counts[unlim_idx] = unlim_count;
+		if (meta.unlim_idx >= 0){
+			starts[meta.unlim_idx] = unlim_start;
+			counts[meta.unlim_idx] = unlim_count;
 		}
-		std::cout << "Resizing tensor to: " << counts;
+		std::cout << "Resizing tensor to: " << counts << '\n';
 		this->resize(counts);
 		ncvar.getVar(starts, counts, strides, this->vec.data());
 	}
@@ -201,7 +167,7 @@ class GeoCube : public Tensor<T> {
 			starts[t_idx] = julian_to_index(julian_day, periodic, centred_t);
 			counts[t_idx] = 1;
 		}
-		std::cout << "Resizing tensor to: " << counts;
+		std::cout << "Resizing tensor to: " << counts << '\n';
 		this->resize(counts);
 		ncvar.getVar(starts, counts, strides, this->vec.data());
 	}
@@ -248,17 +214,20 @@ class GeoCube : public Tensor<T> {
 
 	private:
 
-	void parse_time_unit(NcFilePP &in_file){
+	void parse_time_unit(const std::string& unit_str){
 		// parse time units
 		std::string since;
-		std::stringstream ss(in_file.coordunits_map["time"]);
+		std::stringstream ss(unit_str);
 		ss >> tunit >> since;
 
 		if (since != "since") throw std::runtime_error("time unit is not in the correct format (<units> since <yyyy-mm-dd> <hh:mm:ss>)");
 
-		if      (tunit == "days")   tscale = 1;
-		else if (tunit == "hours")  tscale = 1.0/24.0;
-		else if (tunit == "months") tscale = 1.0*365.2425/12;
+		if      (tunit == "days")     tscale = 1;
+		else if (tunit == "hours")    tscale = 1.0/24.0;
+		else if (tunit == "minutes")  tscale = 1.0/24.0/60.0;
+		else if (tunit == "seconds")  tscale = 1.0/24.0/3600.0;
+		else if (tunit == "months")   tscale = 1.0*365.2425/12;
+		else if (tunit == "years")    tscale = 1.0*365.2425;
 
 		tstep = 0;
 		auto& tvec = coords_trimmed[t_idx];
@@ -266,7 +235,7 @@ class GeoCube : public Tensor<T> {
 
 		if (tvec.size() > 1) tstep = (tvec[tvec.size()-1]-tvec[0])/(tvec.size()-1); // get timestep in days
 
-		std::stringstream ss1(in_file.coordunits_map["time"]);
+		std::stringstream ss1(unit_str);
 		ss1 >> std::get_time(&t_base, std::string(tunit + " since %Y-%m-%d %H:%M:%S").c_str());
 	
 		// std::cout << std::put_time(&t_base, "%Y-%m-%d %H:%M:%S %Z") << '\n';

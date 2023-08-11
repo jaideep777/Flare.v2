@@ -9,6 +9,7 @@ int main(){
 
 	flare::GeoCube<float> v;
 	v.readMeta(in_file);
+	v.print();
 
 	v.setIndices(v.lat_idx, 230, 1);
 	v.setIndices(v.lon_idx, 161, 2);

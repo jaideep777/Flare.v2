@@ -14,7 +14,7 @@ std::ostream& operator << (std::ostream &os, const std::vector<T> &v) {
 	for (const auto &x : v) {
 		os << x << ' ';
 	}
-	os << '\n';
+	// os << '\n';
 	return os;
 }
 
