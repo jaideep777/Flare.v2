@@ -197,7 +197,7 @@ class GeoCube : public Tensor<T> {
 		if (periodic) t = tvec[0] + utils::positive_fmod(t - tvec[0], DeltaT);
 
 		// calculate index such that tvec[idx] is just less than t
-		auto t_it = std::lower_bound(tvec.begin(), tvec.end(), t);
+		auto t_it = std::upper_bound(tvec.begin(), tvec.end(), t);
 		int idx = t_it - tvec.begin() - 1;
 
 		// clamp the start and end points. this case will arise only when periodic is false. 
