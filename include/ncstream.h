@@ -25,10 +25,10 @@ class NcStream{
 	public:
 	size_t   current_file_index;
 	double   current_time;
+	NcFilePP current_file;
 
 	private:
 	std::vector<std::string> filenames;
-	NcFilePP current_file;
 
 	std::vector<double> times;   // combined times vector from all files
 	std::vector<size_t> file_indices; // file index corresponding to t in times
@@ -110,11 +110,21 @@ class NcStream{
 
 		for (auto& t : times) t *= tscale; // convert time vector to "days since base date"
 
-		tstep = 0;
 		if (times.size() > 1) tstep = (times[times.size()-1]-times[0])/(times.size()-1); // get timestep in days
+		else                  tstep = 0;
 
 		DeltaT = times[times.size()-1] - times[0] + tstep;
 
+		// open first file
+		update_file(0);
+
+	}
+
+	void update_file(size_t file_id){
+		current_file.close();
+		current_file.open(filenames[file_id], netCDF::NcFile::read);
+		current_file.readMeta();
+		current_file_index = file_id;
 	}
 
 	inline void print_meta(){

@@ -43,10 +43,10 @@ class NcFilePP : public netCDF::NcFile {
 	std::map <std::string, VarMeta> vars; 
 
 	// data for standardizing dimension names (kept public to be editable)
-	std::vector<std::string>   t_names_try = {"time"};
+	std::vector<std::string>   t_names_try = {"time", "t"};
 	std::vector<std::string> lev_names_try = {"lev", "level", "z"};
 	std::vector<std::string> lat_names_try = {"lat", "latitude", "y"};
-	std::vector<std::string> lon_names_try = {"lon", "longitude", "x"};
+	std::vector<std::string> lon_names_try = {"lon", "long", "longitude", "x"};
 
 	std::map<std::string, std::string> renaming_map; // map used for renaming dimensions to standard names
 

@@ -2,7 +2,7 @@
 #define FLARE_FLARE_GEOCUBE_H
 
 #include <tensor.h>
-#include "ncfilepp.h"
+#include "ncstream.h"
 #include "time_math.h"
 
 namespace flare{
@@ -23,6 +23,9 @@ class GeoCube : public Tensor<T> {
 
 	std::vector <size_t> starts, counts;
 	std::vector <ptrdiff_t> strides;
+
+	bool streaming = false;
+	size_t current_file_id = -999;
 
 	std::string tunit = ""; // time unit in file
 	double tstep;           // interval between data frames [days] 
@@ -90,6 +93,11 @@ class GeoCube : public Tensor<T> {
 		}
 	}
 
+	void readMeta(NcStream& ncstream, std::string varname = ""){
+		readMeta(ncstream.current_file, varname);
+		current_file_id = ncstream.current_file_index;
+		streaming = true;
+	}
 
 	void print(bool b_values = false){
 		std::cout << "Var: " << meta.name << " (" << meta.unit << ")\n";
@@ -162,12 +170,29 @@ class GeoCube : public Tensor<T> {
 		ncvar.getVar(starts, counts, strides, this->vec.data());
 	}
 
-	void readBlock(double julian_day, bool periodic, bool centred_t){
-		if (t_idx > 0){
-			starts[t_idx] = julian_to_index(julian_day, periodic, centred_t);
+	void streamBlock(NcStream& ncstream, double julian_day, bool periodic, bool centred_t){
+		StreamIndex sid = ncstream.julian_to_indices(julian_day, periodic, centred_t);
+
+		// if desired time in not in current file, update file
+		if (ncstream.current_file_index != sid.f_idx){
+			ncstream.update_file(sid.f_idx);
+		}
+
+		// if stream file has changed compared to the file last read in this->meta, update metadata
+		if (current_file_id != sid.f_idx){
+			readMeta(ncstream, meta.name);
+		}
+
+		if (t_idx < 0){
+			throw std::runtime_error("GeoCube: Attempted to stream form a file with no time dimension\n");
+		}
+		else{
+			starts[t_idx] = sid.t_idx;
 			counts[t_idx] = 1;
 		}
+
 		std::cout << "Resizing tensor to: " << counts << '\n';
+		std::cout << "Reading frame @ " << ncstream.streamIdx_to_datestring(sid) << '\n';
 		this->resize(counts);
 		ncvar.getVar(starts, counts, strides, this->vec.data());
 	}
