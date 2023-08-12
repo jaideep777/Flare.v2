@@ -23,14 +23,14 @@ struct StreamIndex{
 
 class NcStream{
 	public:
-	size_t   current_file_index;
+	int      current_file_index;
 	double   current_time;
 	NcFilePP current_file;
 
 	private:
 	std::vector<std::string> filenames;
 
-	std::vector<double> times;   // combined times vector from all files
+	std::vector<double> times;        // combined times vector from all files
 	std::vector<size_t> file_indices; // file index corresponding to t in times
 	std::vector<size_t> t_indices;    // time index within file corresponding to t in times
 

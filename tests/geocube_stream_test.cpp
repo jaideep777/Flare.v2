@@ -7,7 +7,7 @@ int main(){
 	in_stream.current_file.printMeta();
 
 	flare::GeoCube<float> v;
-	v.readMeta(in_stream);
+	v.init_stream(in_stream);
 	v.print();
 
 	v.setIndices(v.lat_idx, 230, 1);
