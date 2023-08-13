@@ -45,20 +45,6 @@ class GeoCube : public Tensor<T> {
 		}
 		coords_trimmed = coords;
 
-		// ~~ Get the dimension indices. i.e., which index in ncdim std::vector is lat, lon, etc
-		lon_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lon")  - meta.dimnames.begin();
-		lat_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lat")  - meta.dimnames.begin();
-		t_idx   = std::find(meta.dimnames.begin(), meta.dimnames.end(), "time") - meta.dimnames.begin();
-
-		if (lon_idx >= meta.dimsizes.size() || lat_idx >= meta.dimsizes.size()) throw std::runtime_error("Lat or Lon not found"); 
-		if (t_idx >= meta.dimnames.size()) t_idx = -1;
-
-		// by default, set to read entire geographic extent at 1 frame in the unlimited dimension 
-		starts.clear(); starts.resize(meta.dimnames.size(), 0);   // set all starts to 0
-		counts = meta.dimsizes;                                   // set all counts to dimension size (all elements)
-		if (meta.unlim_idx >=0) counts[meta.unlim_idx] = 1;       // But if there's an unlimited dimension, set that count to 1
-		strides.clear(); strides.resize(meta.dimnames.size(), 1); // set all strides to 1
-
 		// Get basic variable attributes
 		// missing value
 		try{ ncvar.getAtt("missing_value").getValues(&this->missing_value);}
@@ -78,6 +64,20 @@ class GeoCube : public Tensor<T> {
 		// offset
 		try{ ncvar.getAtt("add_offset").getValues(&add_offset);}
 		catch(netCDF::exceptions::NcException &e){ add_offset = 0.f;}
+
+		// ~~ Get the dimension indices. i.e., which index in ncdim std::vector is lat, lon, etc
+		lon_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lon")  - meta.dimnames.begin();
+		lat_idx = std::find(meta.dimnames.begin(), meta.dimnames.end(), "lat")  - meta.dimnames.begin();
+		t_idx   = std::find(meta.dimnames.begin(), meta.dimnames.end(), "time") - meta.dimnames.begin();
+
+		if (lon_idx >= meta.dimsizes.size() || lat_idx >= meta.dimsizes.size()) throw std::runtime_error("Lat or Lon not found"); 
+		if (t_idx >= meta.dimnames.size()) t_idx = -1;
+
+		// by default, set to read entire geographic extent at 1 frame in the unlimited dimension 
+		starts.clear(); starts.resize(meta.dimnames.size(), 0);   // set all starts to 0
+		counts = meta.dimsizes;                                   // set all counts to dimension size (all elements)
+		if (meta.unlim_idx >=0) counts[meta.unlim_idx] = 1;       // But if there's an unlimited dimension, set that count to 1
+		strides.clear(); strides.resize(meta.dimnames.size(), 1); // set all strides to 1
 
 	}
 
@@ -161,7 +161,7 @@ class GeoCube : public Tensor<T> {
 	void streamBlock(NcStream& ncstream, double julian_day, bool periodic, bool centred_t){
 		StreamIndex sid = ncstream.julian_to_indices(julian_day, periodic, centred_t);
 
-		// if desired time in not in current file, update file
+		// if desired time is in not in current file, update file
 		if (ncstream.current_file_index != sid.f_idx){
 			ncstream.update_file(sid.f_idx);
 		}

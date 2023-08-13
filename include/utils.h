@@ -21,10 +21,17 @@ std::ostream& operator << (std::ostream &os, const std::vector<T> &v) {
 namespace flare{
 namespace utils{
 
+// https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c
 inline double positive_fmod(double x, double period){
-    double res = fmod(x, period);
-    if (res < 0) res += period;
-    return res;
+	double res = fmod(x, period);
+	if (res < 0) res += period;
+	return res;
+}
+
+inline int positive_mod(int x, int period){
+	int res = x % period;
+	if (res < 0) res += period;
+	return res;
 }
 
 

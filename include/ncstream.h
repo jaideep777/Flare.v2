@@ -110,7 +110,7 @@ class NcStream{
 
 		for (auto& t : times) t *= tscale; // convert time vector to "days since base date"
 
-		if (times.size() > 1) tstep = (times[times.size()-1]-times[0])/(times.size()-1); // get timestep in days
+		if (times.size() > 0) tstep = (times.back() - times.front())/(times.size()-1); // get timestep in days
 		else                  tstep = 0;
 
 		DeltaT = times[times.size()-1] - times[0] + tstep;
@@ -178,6 +178,14 @@ class NcStream{
 
 	std::string streamIdx_to_datestring(const StreamIndex& sid){
 		return julian_to_datestring(times[sid.idx] + date_to_julian(t_base));
+	}
+
+	StreamIndex advance_cyclic(const StreamIndex& sid, int n){
+		StreamIndex sid_next;
+		sid_next.idx   = utils::positive_mod(int(sid.idx) + n, times.size());
+		sid_next.f_idx = file_indices[sid_next.idx];
+		sid_next.t_idx = t_indices[sid_next.idx];
+		return sid_next;
 	}
 
 	private:
