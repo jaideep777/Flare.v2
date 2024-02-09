@@ -26,7 +26,7 @@ class NcStream : public Stream{
 
 		filenames = _filenames;
 		
-		// To construct the time vector, we need to open each file once and obtain its time vector
+		// To construct the full time vector, we need to open each file once and obtain its time vector
 		for (size_t i = 0; i<filenames.size(); ++i){
 			std::string fname = filenames[i];
 			current_file.open(fname, netCDF::NcFile::read);

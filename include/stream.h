@@ -46,6 +46,7 @@ class Stream{
 		times.clear();
 		file_indices.clear();
 		t_indices.clear();
+		filenames.clear();
 	}
 
 	/// @brief Sets the time vector and time unit for the stream.
