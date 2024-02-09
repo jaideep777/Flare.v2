@@ -1,5 +1,5 @@
-#ifndef FLARE_FLARE_UTILS_H
-#define FLARE_FLARE_UTILS_H
+#ifndef FLARE_UTILS_UTILS_H
+#define FLARE_UTILS_UTILS_H
 
 #include <iostream>
 #include <vector>

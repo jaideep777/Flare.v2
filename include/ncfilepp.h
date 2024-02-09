@@ -72,8 +72,10 @@ class NcFilePP : public netCDF::NcFile {
 		// get all variables in the file in a [name --> variable] map
 		std::multimap<std::string, netCDF::NcVar> vars_map_temp = this->getVars();
 		// then create vars_map by standardizing names
-		for (auto& p : vars_map_temp) vars_map[standarize_name(p.first)] = p.second;
-
+		for (auto& p : vars_map_temp){
+			vars_map[standarize_name(p.first)] = p.second;
+		}
+		
 		// Get all coordinates. This returns NcGroups
 		std::map<std::string, netCDF::NcGroup> coords_map_temp = this->getCoordVars();
 		// Extract variables from the obtained coordinate names
@@ -81,7 +83,7 @@ class NcFilePP : public netCDF::NcFile {
 			coords_map[standarize_name(p.first)] = p.second.getVar(p.first);
 		} 
 
-		// remove coord vars from all variables, so only data variables are left
+		// remove coords from list of all variables, so only data variables are left
 		for (auto p : coords_map){
 			vars_map.erase(p.first);
 		}

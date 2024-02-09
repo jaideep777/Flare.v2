@@ -1,12 +1,13 @@
-#ifndef FLARE_TIME_MATH_H
-#define FLARE_TIME_MATH_H
+#ifndef FLARE_FLARE_TIME_MATH_H
+#define FLARE_FLARE_TIME_MATH_H
 
 #include <iomanip>
 #include <iostream>
 #include <chrono>
 #include <sstream>
 
-// Note: tm format:
+// Note: 
+// tm format:
 // year = years OVER 1900. So add 1900 to get CE year
 // mon = 0-11. So add 1 for gday calculations
 // mday = 1-31
@@ -35,11 +36,13 @@ inline std::string date_to_string(std::tm t, std::string format = "%Y-%m-%d %H:%
 	return sout.str();
 }
 
-// calculate days since 01-Mar-0000 AD 
-// see: http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
-// archived here: https://web.archive.org/web/20170507133619/https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html 
-// inputs: y [anything], m [1-12], d [1-31]
-// time is assumed to be in GMT. Time zone conversion is up to the user
+/// @brief calculate days since 01-Mar-0000 AD 
+/// @param y year [anything]
+/// @param m month [1-12]
+/// @param d day [1-31]
+/// @return days since 01-Mar-0000 AD 
+/// see: http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+/// archived here: https://web.archive.org/web/20170507133619/https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html 
 inline int _ymd2gday(int y, int m, int d){
 	m = (m+9)%12;
 	y = y - m/10;
@@ -47,9 +50,13 @@ inline int _ymd2gday(int y, int m, int d){
 	return days_since_01_03_0000; 
 }
 
-// Julian days start on -4173-11-24 12:00:00 (24 Nov 4174 BC)
-// https://en.wikipedia.org/wiki/Julian_day
-// time is assumed to be in GMT. Time zone conversion is up to the user
+
+/// @brief Converts date struct to Julian day
+/// @param time_struct time to convert
+/// @return Julian day (including day fraction)
+/// Julian days start on -4173-11-24 12:00:00 (24 Nov 4174 BC)
+/// https://en.wikipedia.org/wiki/Julian_day
+/// time is assumed to be in GMT. Time zone conversion is up to the user
 inline double date_to_julian(std::tm time_struct){
 	// transform to conform to gday format
 	time_struct.tm_year += 1900; 
@@ -61,11 +68,16 @@ inline double date_to_julian(std::tm time_struct){
 	return d_int + d_frac + 1721119.5; // 1721119.5 is julian day number at 00:00:00 on 01-03-0000, i.e. the difference between gday epoch (01-03-0000 00:00:00) and julian epoch (-4173-11-24 12:00:00)
 }
 
-// calculate days since 01-Mar-0000 AD (arbitrary reference date)
-// see: http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
-// archived here: https://web.archive.org/web/20170507133619/https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html 
-// input: gday (days since 01-03-0000) 
-// time is assumed to be in GMT. Time zone conversion is up to the user
+
+/// @brief Convert Julian day to time struct
+/// @param julian_date Julian day (including day fraction)
+/// @return time
+/// First subtracts offset to convert from Julian day to 
+///   days since 01-Mar-0000 AD (arbitrary reference date)
+///   see: http://alcor.concordia.ca/~gpkatch/gdate-algorithm.html
+///   archived here: https://web.archive.org/web/20170507133619/https://alcor.concordia.ca/~gpkatch/gdate-algorithm.html 
+/// Then converts that to time struct
+/// time is assumed to be in GMT. Time zone conversion is up to the user
 inline std::tm julian_to_date(double julian_date){
 	std::tm result;
 	double gday = julian_date - 1721119.5;
@@ -75,7 +87,7 @@ inline std::tm julian_to_date(double julian_date){
 	// get day in yyyy, mm, dd
 	int ystr, mstr, dstr;
 	int y, ddd, mm, mi;
-	y = (10000*(long long int)g + 14780)/3652425;
+	y = (10000*static_cast<long long int>(g) + 14780)/3652425;
 	ddd = g - (365*y + y/4 - y/100 + y/400);
 	if (ddd < 0){
 		--y;

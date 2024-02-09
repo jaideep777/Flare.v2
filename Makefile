@@ -26,6 +26,14 @@ PROFILING_FLAGS = -g -pg
 CPPFLAGS = -O3 -std=c++17 -Wall -Wextra $(PROFILING_FLAGS)
 LDFLAGS =  $(PROFILING_FLAGS)
 
+CPPFLAGS += -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
+            -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 \
+			-Winit-self -Wlogical-op \
+			-Wmissing-include-dirs -Wnoexcept -Wold-style-cast \
+			-Woverloaded-virtual -Wredundant-decls -Wshadow \
+			-Wsign-promo -Wstrict-null-sentinel \
+			-Wswitch-default -Wundef -Wno-unused \
+
 ## -Weffc++
 #CPPFLAGS +=    \
 #-pedantic-errors  -Wcast-align \
@@ -50,9 +58,9 @@ LDFLAGS =  $(PROFILING_FLAGS)
 #-Wwrite-strings \
 ##-Waggregate-return -Wpadded -Wfloat-equal -Winline
 
-#CPPFLAGS += -Wno-sign-compare -Wno-unused-variable \
--Wno-unused-but-set-variable -Wno-float-conversion \
--Wno-unused-parameter
+CPPFLAGS += -Wno-sign-compare -Wno-unused-variable \
+# -Wno-unused-but-set-variable -Wno-float-conversion \
+# -Wno-unused-parameter
 
 # libs
 AR = ar
