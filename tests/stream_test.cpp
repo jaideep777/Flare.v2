@@ -8,7 +8,7 @@ int main(){
 	vector<double> times(24);
 	std::iota(times.begin(), times.end(), 12);
 
-	in_stream.set_times(times, "months since 2001-1-1");
+	in_stream.open(times, "months since 2001-1-1");
 	in_stream.print_meta();
 	in_stream.print_times();
 

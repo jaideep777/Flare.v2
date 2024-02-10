@@ -21,7 +21,9 @@ class NcStream : public Stream{
 
 	public:
 
-	inline void open(std::vector<std::string> _filenames, std::vector<std::string> tnames = {"time", "t"}){
+	/// @brief Specializatin of Stream::open() for NetCDF files
+	/// @param _filenames list of files to stream from
+	inline void open(std::vector<std::string> _filenames){
 		reset();
 
 		filenames = _filenames;
@@ -61,17 +63,17 @@ class NcStream : public Stream{
 
 			t_indices.insert(t_indices.end(), idxes.begin(), idxes.end());
 
-			std::string _unit_str;
-			try{ tVar.getAtt("units").getValues(_unit_str); }
+			std::string _tunit_str;
+			try{ tVar.getAtt("units").getValues(_tunit_str); }
 			catch(netCDF::exceptions::NcException &e){ std::cout << "Warning: Time variable does not have a unit\n";}
 
 			// Read and parse time unit from first file. This will be used to check time units in subsequent files
 			if (i == 0){
-				unit_str = _unit_str;
+				unit_str = _tunit_str;
 				parse_time_unit(unit_str); // sets tunit, tscale, t_base
 			}
 			else{
-				if (unit_str != _unit_str) throw std::runtime_error("NcStream: Time units dont match among specfied files\n"); 
+				if (unit_str != _tunit_str) throw std::runtime_error("NcStream: Time units dont match among specfied files\n"); 
 			}
 
 			current_file.close();
@@ -81,10 +83,10 @@ class NcStream : public Stream{
 
 		for (auto& t : times) t *= tscale; // convert time vector to "days since base date"
 
-		if (times.size() > 0) tstep = (times.back() - times.front())/(times.size()-1); // get timestep in days
-		else                  tstep = 0;
-
-		DeltaT = times[times.size()-1] - times[0] + tstep;
+		if (times.size() > 0){
+			tstep = (times.back() - times.front())/(times.size()-1); // get timestep in days
+			DeltaT = times[times.size()-1] - times[0] + tstep;
+		}
 
 		// open first file
 		update_file(0);
