@@ -15,7 +15,6 @@ int main(){
 
 	in_stream.advance_to_time(flare::datestring_to_julian("2013-06-01 0:0:0"), true, false);
 	in_stream.print_meta();
-	in_stream.get_next_line();
 	cout << '|' << in_stream.rows.back().get_line_raw() << '|' << endl;
 
 	if (in_stream.rows.back().get_line_raw() != "2013,396.5") return 1;

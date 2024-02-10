@@ -57,7 +57,6 @@ std::istream& operator>>(std::istream& str, CSVRow& data){
 class CsvStream : public Stream{
 	private:
 	int t_id = -1;
-	StreamIndex previous_index;
 	StreamIndex current_index;
 	std::ifstream csvin;
 
@@ -72,13 +71,11 @@ class CsvStream : public Stream{
 		std::cout << "   colnames: " << colnames << '\n';
 		std::cout << "   t_id: " << t_id << '\n';
 		std::cout << "   current_idx: " << current_index.idx << " / " << current_index.f_idx << "." << current_index.t_idx << '\n';
-		std::cout << "   previous_idx: " << previous_index.idx << " / " << previous_index.f_idx << "." << previous_index.t_idx << '\n';
 	}
 
 	inline void reset() override{
 		Stream::reset();
 		current_index.set(0,0,0);
-		previous_index.set(0,0,0);
 		t_id = -1;
 		colnames.clear();
 	}
@@ -105,7 +102,7 @@ class CsvStream : public Stream{
 				for (int i=0; i<row.size(); ++i){
 					colnames.push_back(row[i]);
 				}
-				std::cout << colnames << std::endl;
+				// std::cout << colnames << std::endl;
 			}
 
 			// get index of time column (name comparisons are case insensitive)
@@ -136,7 +133,7 @@ class CsvStream : public Stream{
 
 		// Parse time unit provided
 		unit_str = _tunit_str;
-		std::cout << unit_str << std::endl;
+		// std::cout << unit_str << std::endl;
 		parse_time_unit(unit_str); // sets tunit, tscale, t_base
 
 		if (!std::is_sorted(times.begin(), times.end()))  throw std::runtime_error("NcStream: Combined time vector is not in ascending order. Check the order of files supplied.\n");
@@ -160,7 +157,6 @@ class CsvStream : public Stream{
 		csvin.open(filenames[file_id]);
 		if (!csvin) throw std::runtime_error("Could not open file: "+filenames[file_id]);
 
-		previous_index = current_index;
 		current_index.set(file_id, 0, 0);
 	}
 
@@ -168,20 +164,15 @@ class CsvStream : public Stream{
 		StreamIndex new_idx = julian_to_indices(j, periodic, centered_t);
 		update_file(new_idx.f_idx);
 		current_index = new_idx;
-		
-		std::string line;
-		std::getline(csvin, line, '\n'); // skip header
-		for (int i=0; i<current_index.t_idx; ++i){
-			std::getline(csvin, line, '\n'); // skip t_idx-1 lines so that next line will be desired index
-		}
-	}
 
-	std::string get_next_line(){
+		std::string line;
 		CSVRow row;
-		csvin >> row;
-		rows.push(row);
-		if (rows.size() > 2) rows.pop();
-		return rows.back().get_line_raw();
+		csvin >> row; // skip header
+		for (int i=0; i<=current_index.t_idx; ++i){
+			csvin >> row; // skip t_idx-1 lines so that next line will be desired index
+			rows.push(row);
+			if (rows.size() > 2) rows.pop();
+		}
 	}
 };
 
