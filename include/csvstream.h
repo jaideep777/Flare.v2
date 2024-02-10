@@ -62,7 +62,7 @@ class CsvStream : public Stream{
 
 	public:
 	std::vector<std::string> colnames;
-	std::queue<CSVRow> rows;
+	CSVRow current_row;
 
 	public:
 
@@ -163,16 +163,13 @@ class CsvStream : public Stream{
 	void advance_to_time(double j, bool periodic, bool centered_t){
 		StreamIndex new_idx = julian_to_indices(j, periodic, centered_t);
 		update_file(new_idx.f_idx);
-		current_index = new_idx;
 
 		std::string line;
-		CSVRow row;
-		csvin >> row; // skip header
-		for (int i=0; i<=current_index.t_idx; ++i){
-			csvin >> row; // skip t_idx-1 lines so that next line will be desired index
-			rows.push(row);
-			if (rows.size() > 2) rows.pop();
+		csvin >> current_row; // skip header
+		for (int i=0; i<=new_idx.t_idx; ++i){
+			csvin >> current_row; // skip t_idx-1 lines so that next line will be desired index
 		}
+		current_index = new_idx;
 	}
 };
 
