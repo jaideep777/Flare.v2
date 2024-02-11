@@ -15,34 +15,22 @@ int main(){
 
 	in_stream.advance_to_time(flare::datestring_to_julian("2013-06-01 0:0:0"), true, false);
 	in_stream.print_meta();
-	cout << '|' << in_stream.current_row.get_line_raw() << '|' << endl;
 
+	cout << '|' << in_stream.current_row.get_line_raw() << '|' << endl;
 	if (in_stream.current_row.get_line_raw() != "2013,396.5") return 1;
 
-	// {
-	// /// TESTING OF T INDEX CALCULATION
-	// std::cout << "Calculate time index with periodic l-edged t vector\n\n";
-	// double t0 = flare::datestring_to_julian("2002-1-1 00:00:00");
-	// for (double t = t0; t < t0+15*12; t+=(365.2524/12)){
-	// 	std::cout << flare::julian_to_datestring(t) << ": " 
-	// 	          << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
-	// }
-	// std::cout << "\n";
+	in_stream.advance_to_time(flare::datestring_to_julian("2013-07-15 0:0:0"), true, false);
+	in_stream.advance_to_time(flare::datestring_to_julian("2013-12-15 0:0:0"), true, false);
+	in_stream.advance_to_time(flare::datestring_to_julian("2014-04-15 0:0:0"), true, false);
 
-	// std::cout << "Calculate time index with periodic l-edged t vector\n\n";
-	// t0 = flare::datestring_to_julian("2005-06-11 00:00:00");
-	// for (double t = t0; t < t0+20*12; t+=(365.2524/12)){
-	// 	std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
-	// }
-	// std::cout << "\n";
+	cout << '|' << in_stream.current_row.get_line_raw() << '|' << endl;
+	if (in_stream.current_row.get_line_raw() != "2014,399") return 1;
 
-	// std::cout << "Calculate time index with periodic l-edged t vector\n\n";
-	// t0 = flare::datestring_to_julian("2002-1-2 00:00:00");
-	// for (double t = t0; t > t0-15*12; t-=(365.2524/12)){
-	// 	std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
-	// }
-	// std::cout << "\n";
-	// }
+	in_stream.advance_to_time(flare::datestring_to_julian("2029-04-15 0:0:0"), true, false);
+
+	cout << '|' << in_stream.current_row.get_line_raw() << '|' << endl;
+	if (in_stream.current_row.get_line_raw() != "2029,414.2") return 1;
+
 
 	return 0;
 }

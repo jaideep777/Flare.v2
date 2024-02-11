@@ -108,17 +108,14 @@ class CsvStream : public Stream{
 			// get index of time column (name comparisons are case insensitive)
 			for (size_t icol=0; icol<colnames.size(); ++icol){
 				std::string col = colnames[icol];
-				std::transform(col.begin(), col.end(), col.begin(),
-				       [](unsigned char c){ return std::tolower(c); });
 				for (auto name : tnames){
-					std::transform(name.begin(), name.end(), name.begin(),
-						[](unsigned char c){ return std::tolower(c); });
-
-					if (col == name) t_id = icol;
+					if (utils::to_lower(col) == utils::to_lower(name)) t_id = icol;
 				}
 			}
 			if (t_id < 0) throw std::runtime_error("Cannot find time column in CSV file: "+fname);
 
+			idx_f0.push_back(times.size());
+	
 			// read time column for all rows
 			int line_num = 0;
 			while(fin >> row){
@@ -157,16 +154,33 @@ class CsvStream : public Stream{
 		csvin.open(filenames[file_id]);
 		if (!csvin) throw std::runtime_error("Could not open file: "+filenames[file_id]);
 
-		current_index.set(file_id, 0, 0);
+		csvin >> current_row; // skip header
+
+		// set current index to first data entry in the file
+		current_index.set(idx_f0[file_id], file_id, 0);
+		std::cout << " -- updating file, index to --> " << current_index.f_idx << "." << current_index.t_idx << '\n';
+
+		// Since data from current index must already be in current_row, read first data entry from file
+		csvin >> current_row; 
 	}
 
 	void advance_to_time(double j, bool periodic, bool centered_t){
+		// get index to read
 		StreamIndex new_idx = julian_to_indices(j, periodic, centered_t);
-		update_file(new_idx.f_idx);
+		std::cout << "advance from " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
+		
+		// Skip reading if new index is not different from current
+		if (current_index == new_idx) return;
 
+		// update file, if necessary
+		if (current_index.f_idx != new_idx.f_idx){
+			update_file(new_idx.f_idx);
+		}
+
+		std::cout << " -- advancing: " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
+		// consume rows until we hit new_index
 		std::string line;
-		csvin >> current_row; // skip header
-		for (int i=0; i<=new_idx.t_idx; ++i){
+		for (int i=current_index.t_idx; i<new_idx.t_idx; ++i){
 			csvin >> current_row; // skip t_idx-1 lines so that next line will be desired index
 		}
 		current_index = new_idx;
@@ -175,5 +189,6 @@ class CsvStream : public Stream{
 
 
 } // namespace flare
+
 
 #endif

@@ -39,8 +39,7 @@ class NcStream : public Stream{
 			for (auto p : vars_map_temp){
 				std::string name = p.first;  // get variable name
 				// convert to lowercase
-				std::transform(name.begin(), name.end(), name.begin(),
-				       [](unsigned char c){ return std::tolower(c); });
+				name = utils::to_lower(name);
 				// check if the name represents time   
 				auto it = std::find(tnames.begin(), tnames.end(), name); 
 				// if found, read the corresponding var and break

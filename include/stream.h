@@ -16,13 +16,19 @@ namespace flare{
 
 /// A set of indices that locates a given time the provided files.
 struct StreamIndex{
-	size_t idx;   ///< Index within the concatenated times vector.
+	size_t idx;   ///< Index within the concatenated times vector (full index).
 	size_t f_idx; ///< Index of the file containing the time at times[idx].
 	size_t t_idx; ///< Index within the file's time vector corresponding to times[idx].
 
 	void set(size_t _idx, size_t _f_idx, size_t _t_idx){
 		idx = _idx; f_idx = _f_idx; t_idx = _t_idx;
 	}
+
+	bool operator==(const StreamIndex& rhs) const{
+        return (idx == rhs.idx) && 
+		       (f_idx == rhs.f_idx) && 
+			   (t_idx == rhs.t_idx);
+    }
 };
 
 class Stream{
@@ -36,6 +42,7 @@ class Stream{
 	std::vector<double> times;        ///< combined times vector concatenated from all files
 	std::vector<size_t> file_indices; ///< For each t = times[i], this stores the index of the file which contains t
 	std::vector<size_t> t_indices;    ///< For each t = times[i], this stores the index within the file's time vector that corresponds to t
+	std::vector<size_t> idx_f0;       ///< full index corresponding to the first entry in file. Used for convenience
 
 	std::string unit_str;   ///< full string representation of time unit (e.g., "days since yyyy-mm-dd hh:mm:ss")
 	std::string tunit = ""; ///< time unit in file (e.g., "days" or "months")
@@ -73,6 +80,8 @@ class Stream{
 	inline void open(const std::vector<double>& tvec, std::string _tunit){
 		reset();
 		
+		idx_f0.push_back(times.size());
+
 		times.insert(times.end(), tvec.begin(), tvec.end());
 		file_indices.resize(times.size(), 0);
 		
@@ -102,14 +111,18 @@ class Stream{
 		std::cout << "   DeltaT = " << DeltaT << " days\n";
 		std::cout << "   tstep = " << tstep << " days\n";
 		std::cout << "   t_base = " << date_to_string(t_base) << "\n";
+		std::cout << "   files: \n";
+		for (int i=0; i<filenames.size(); ++i){
+			std::cout << "      " << idx_f0[i] << ": " << filenames[i] << '\n';
+		}
 	}
 
 	inline void print_times(){
 		auto f = std::cout.flags();
-		std::cout << "         t\tf_idx\tt_idx\tpretty t\n"; // << times << '\n';
+		std::cout << "         t\tidx\tf_idx\tt_idx\tpretty t\n"; // << times << '\n';
 		for (int i=0; i<times.size(); ++i){
 			std::cout << std::fixed << std::setw(10) << std::setprecision(4) 
-					  << times[i] << '\t' << file_indices[i] << '\t' << t_indices[i] << '\t' << julian_to_datestring(date_to_julian(t_base) + times[i]) << '\n';
+					  << times[i] << '\t' << i << "\t" << file_indices[i] << '\t' << t_indices[i] << '\t' << julian_to_datestring(date_to_julian(t_base) + times[i]) << '\n';
 		}
 		std::cout << '\n';
 		std::cout.flags(f);
