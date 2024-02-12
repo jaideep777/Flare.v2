@@ -1,12 +1,14 @@
 #include "csvstream.h"
 using namespace std;
 
+// to verify, run tests/Rscripts/csvstream_periodic_extension_test_analysis.R
+
 int main(){
 
 	flare::CsvStream in_stream;
 
 	in_stream.open({"tests/data/MetData_AmzFACE_Monthly_2000_2015_PlantFATE.csv"}, 
-					"years since 0000-1-1");
+					"decimal year");
 	in_stream.print_meta();
 	in_stream.print_times();
 

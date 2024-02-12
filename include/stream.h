@@ -194,7 +194,14 @@ class Stream{
 
 	protected:
 
-	inline void parse_time_unit(const std::string& tunit_str){
+	inline void parse_time_unit(std::string tunit_str){
+		// treat "decimal year" as "years since 0000-01-00 0:0:0". 
+		// - Seems weird but works!
+		// - Note, using "years since 0000-01-01" adds an extra day, 
+		//       perhaps because over 2000 years (0001-2000) all leap days cancel out, 
+		//       but 0000 is a leap year so adds an extra day
+		if (tunit_str == "decimal year") tunit_str = "years since 0000-01-00 0:0:0";
+
 		// parse time units
 		std::string since;
 		std::stringstream ss(tunit_str);
@@ -209,7 +216,7 @@ class Stream{
 		else if (tunit == "months")   tscale = 1.0*365.2425/12;
 		else if (tunit == "years")    tscale = 1.0*365.2425;
 
-		if (tunit == "months" || tunit == "years") std::cout << "Warning: using " << tunit << " as time unit. 365.2425 days per year will be assumed. Time points corresponding to exact dates will not be accurate.\n";
+		if (tunit == "months" || tunit == "years") std::cout << "Warning: using " << tunit << " as time unit. 365.2425 days per year will be assumed. Conversion of time points to dates may have an error of +/- 1 day.\n";
 
 		ss.str(tunit_str);
 		ss >> std::get_time(&t_base, std::string(tunit + " since %Y-%m-%d %H:%M:%S").c_str());
