@@ -54,12 +54,14 @@ class NcStream : public Stream{
 			std::vector<double> tvec(tVar.getDim(0).getSize());
 			tVar.getVar(tvec.data());
 
+			idx_f0.push_back(times.size());
+			
 			times.insert(times.end(), tvec.begin(), tvec.end());
+			
 			file_indices.resize(times.size(), i);
 			
 			std::vector<size_t> idxes(tvec.size());
 			std::iota(idxes.begin(), idxes.end(), 0);
-
 			t_indices.insert(t_indices.end(), idxes.begin(), idxes.end());
 
 			std::string _tunit_str;
@@ -96,7 +98,7 @@ class NcStream : public Stream{
 		current_file.close();
 		current_file.open(filenames[file_id], netCDF::NcFile::read);
 		current_file.readMeta();
-		current_file_index = file_id;
+		current_index.set(idx_f0[file_id], file_id, -1);
 	}
 
 };

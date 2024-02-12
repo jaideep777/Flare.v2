@@ -16,25 +16,25 @@ namespace flare{
 
 /// A set of indices that locates a given time the provided files.
 struct StreamIndex{
-	size_t idx;   ///< Index within the concatenated times vector (full index).
-	size_t f_idx; ///< Index of the file containing the time at times[idx].
-	size_t t_idx; ///< Index within the file's time vector corresponding to times[idx].
+	size_t idx = 0;   ///< Index within the concatenated times vector (full index).
+	size_t f_idx = 0; ///< Index of the file containing the time at times[idx].
+	size_t t_idx = 0; ///< Index within the file's time vector corresponding to times[idx].
 
-	void set(size_t _idx, size_t _f_idx, size_t _t_idx){
+	inline void set(size_t _idx, size_t _f_idx, size_t _t_idx){
 		idx = _idx; f_idx = _f_idx; t_idx = _t_idx;
 	}
 
-	bool operator==(const StreamIndex& rhs) const{
+	inline bool operator==(const StreamIndex& rhs) const{
         return (idx == rhs.idx) && 
 		       (f_idx == rhs.f_idx) && 
-			   (t_idx == rhs.t_idx);
+		       (t_idx == rhs.t_idx);
     }
 };
 
 class Stream{
 	public:
-	int    current_file_index; ///< Index of the current file.
-	double current_time;       ///< Current time.
+	StreamIndex current_index;    ///< Index of current record.
+	// double current_time;       ///< Current time.
 
 	protected:
 	std::vector<std::string> filenames; ///< Names of files containing temporal data.
@@ -58,11 +58,11 @@ class Stream{
 	}
 
 	inline virtual void reset(){
-		current_file_index = -1;
 		times.clear();
 		file_indices.clear();
 		t_indices.clear();
 		filenames.clear();
+		idx_f0.clear();
 	}
 
 	/// @brief Specify the name of the time dimension in file
@@ -111,6 +111,8 @@ class Stream{
 		std::cout << "   DeltaT = " << DeltaT << " days\n";
 		std::cout << "   tstep = " << tstep << " days\n";
 		std::cout << "   t_base = " << date_to_string(t_base) << "\n";
+		std::cout << "   current_index: " << current_index.idx << "[" << current_index.f_idx << "." << current_index.t_idx << "]" << "\n";
+		std::cout << "   current_time: " << streamIdx_to_datestring(current_index) << "\n";
 		std::cout << "   files: \n";
 		for (int i=0; i<filenames.size(); ++i){
 			std::cout << "      " << idx_f0[i] << ": " << filenames[i] << '\n';
@@ -134,17 +136,17 @@ class Stream{
 	/// @param periodic   whether data should be extended periodically
 	/// @param centred_t  whether t at index represents centre of interval (if true) or start of interval (if false)
 	/// @return           index in the stream for which data should be read
-	StreamIndex julian_to_indices(double j, bool periodic, bool centred_t){
+	inline StreamIndex julian_to_indices(double j, bool periodic, bool centred_t){
 
 		// convert desired time to file unit (days since tbase)
 		double t = j - date_to_julian(t_base); 
 		// std::cout << "t in file units = " << t << "\n";
 
 		if (centred_t) t += tstep/2;     //   |----0----|-----1----|----2----|---
-											   //   x--->0    |     1    | shift t (x) by half the interval size
-											   //   |    x--->0     1    |    2
-											   //   |    0  x--->0  1    |    2
-											   //   |    0    | x--->1   [note this one just beyound the interval midpoint, when shifted, goes beyond 1, and returns 1 rather than 0]
+		                                 //   x--->0    |     1    | shift t (x) by half the interval size
+		                                 //   |    x--->0     1    |    2
+		                                 //   |    0  x--->0  1    |    2
+		                                 //   |    0    | x--->1   [note this one just beyound the interval midpoint, when shifted, goes beyond 1, and returns 1 rather than 0]
 		
 		// Calculate total time range of data in the file, and bring t to principle range if periodic extension is desired
 		if (periodic) t = times[0] + utils::positive_fmod(t - times[0], DeltaT);
@@ -157,35 +159,42 @@ class Stream{
 		idx = std::clamp(idx, 0, int(times.size()-1)); 
 		
 		StreamIndex sid;
-		sid.idx = idx;
-		sid.f_idx = file_indices[idx];
-		sid.t_idx = t_indices[idx];
+		sid.set(idx, file_indices[idx], t_indices[idx]);
 
 		return sid;
 	}
 
-	std::string streamIdx_to_datestring(const StreamIndex& sid){
+	inline std::string streamIdx_to_datestring(const StreamIndex& sid){
 		return julian_to_datestring(times[sid.idx] + date_to_julian(t_base));
 	}
 
 
-	/// Advances cyclically by a given number of indices.
+	/// Advances by a given number of indices.
 	/// This method advances cyclically within the time vector by a given number of steps.
 	/// @param sid The current StreamIndex.
-	/// @param n The number of indices to advance.
+	/// @param n The number of indices to advance, negative to go backwards.
+	/// @param periodic Whether index should move cyclically. Otherwise, it will be clamped at 0 and max.
 	/// @return The StreamIndex after advancement.
-	StreamIndex advance_cyclic(const StreamIndex& sid, int n){
+	inline StreamIndex advance(const StreamIndex& sid, int n, bool periodic){
 		StreamIndex sid_next;
-		sid_next.idx   = utils::positive_mod(int(sid.idx) + n, times.size());
+
+		if (periodic) sid_next.idx = utils::positive_mod(int(sid.idx) + n, times.size());
+		else          sid_next.idx = std::clamp(int(sid.idx) + n, 0, int(times.size()-1)); 
+
 		sid_next.f_idx = file_indices[sid_next.idx];
 		sid_next.t_idx = t_indices[sid_next.idx];
 		return sid_next;
 	}
 
 
+	inline virtual void advance_to_time(double j, bool periodic, bool centered_t){
+		current_index = julian_to_indices(j, periodic, centered_t);
+	} 
+
+
 	protected:
 
-	void parse_time_unit(const std::string& tunit_str){
+	inline void parse_time_unit(const std::string& tunit_str){
 		// parse time units
 		std::string since;
 		std::stringstream ss(tunit_str);
@@ -199,6 +208,8 @@ class Stream{
 		else if (tunit == "seconds")  tscale = 1.0/24.0/3600.0;
 		else if (tunit == "months")   tscale = 1.0*365.2425/12;
 		else if (tunit == "years")    tscale = 1.0*365.2425;
+
+		if (tunit == "months" || tunit == "years") std::cout << "Warning: using " << tunit << " as time unit. 365.2425 days per year will be assumed. Time points corresponding to exact dates will not be accurate.\n";
 
 		ss.str(tunit_str);
 		ss >> std::get_time(&t_base, std::string(tunit + " since %Y-%m-%d %H:%M:%S").c_str());

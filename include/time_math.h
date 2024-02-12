@@ -130,6 +130,11 @@ inline double datestring_to_julian(std::string datestring){
 	return date_to_julian(string_to_date(datestring));
 }
 
+inline double decimal_year(std::tm time_point){
+	double days_in_yr = isLeapYear(time_point.tm_year+1900)? 366:365;
+	return time_point.tm_year + 1900 + time_point.tm_yday/days_in_yr;
+}
+
 } // namespace flare
 
 

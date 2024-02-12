@@ -57,7 +57,6 @@ std::istream& operator>>(std::istream& str, CSVRow& data){
 class CsvStream : public Stream{
 	private:
 	int t_id = -1;
-	StreamIndex current_index;
 	std::ifstream csvin;
 
 	public:
@@ -148,13 +147,12 @@ class CsvStream : public Stream{
 	}
 
 	void update_file(size_t file_id){
-		if (current_index.f_idx == file_id) return; // no need to do anything if file has not changed
-		
 		csvin.close();
 		csvin.open(filenames[file_id]);
 		if (!csvin) throw std::runtime_error("Could not open file: "+filenames[file_id]);
 
 		csvin >> current_row; // skip header
+		std::cout << " -- update_file(): header row: " << current_row.get_line_raw() << '\n';
 
 		// set current index to first data entry in the file
 		current_index.set(idx_f0[file_id], file_id, 0);
@@ -164,7 +162,7 @@ class CsvStream : public Stream{
 		csvin >> current_row; 
 	}
 
-	void advance_to_time(double j, bool periodic, bool centered_t){
+	void advance_to_time(double j, bool periodic, bool centered_t) override {
 		// get index to read
 		StreamIndex new_idx = julian_to_indices(j, periodic, centered_t);
 		std::cout << "advance from " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
@@ -172,16 +170,19 @@ class CsvStream : public Stream{
 		// Skip reading if new index is not different from current
 		if (current_index == new_idx) return;
 
-		// update file, if necessary
-		if (current_index.f_idx != new_idx.f_idx){
+		// update file if 
+		//    a) file index has changed
+		//    b) new idx < current idx (since ifstream cannot go backwards)
+		if (current_index.f_idx != new_idx.f_idx ||
+		    current_index.idx > new_idx.idx){
 			update_file(new_idx.f_idx);
 		}
 
 		std::cout << " -- advancing: " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
 		// consume rows until we hit new_index
-		std::string line;
 		for (int i=current_index.t_idx; i<new_idx.t_idx; ++i){
-			csvin >> current_row; // skip t_idx-1 lines so that next line will be desired index
+			csvin >> current_row;
+			std::cout << "   -- " << current_row.get_line_raw() << "\n";
 		}
 		current_index = new_idx;
 	}

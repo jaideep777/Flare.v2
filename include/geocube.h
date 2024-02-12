@@ -160,6 +160,7 @@ class GeoCube : public Tensor<T> {
 
 	void streamBlock(NcStream& ncstream, double julian_day, bool periodic, bool centred_t){
 		StreamIndex sid = ncstream.julian_to_indices(julian_day, periodic, centred_t);
+		// TODO: Check whether sid is same as current index, and if so, skip reading
 
 		// if desired time is in not in current file, update file
 		if (ncstream.current_file_index != sid.f_idx){
