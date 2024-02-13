@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 // print a std::vector via ofstream
 // prints: size | v1 v2 v3 ...

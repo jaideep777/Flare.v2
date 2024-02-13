@@ -14,8 +14,9 @@
 
 namespace flare{
 
-/// A set of indices that locates a given time the provided files.
-struct StreamIndex{
+/// A set of indices that locates a given time point in stream files.
+class StreamIndex{
+	public:
 	size_t idx = 0;   ///< Index within the concatenated times vector (full index).
 	size_t f_idx = 0; ///< Index of the file containing the time at times[idx].
 	size_t t_idx = 0; ///< Index within the file's time vector corresponding to times[idx].
@@ -30,6 +31,18 @@ struct StreamIndex{
 		       (t_idx == rhs.t_idx);
     }
 };
+
+} // namespace flare
+
+// Note: this needs to be defined outside namespace flare, othwerise it masks globally defined <<, e.g. in csvstream.h
+//       see: https://stackoverflow.com/questions/5195512/namespaces-and-operator-resolution
+inline std::ostream& operator<<(std::ostream& out, const flare::StreamIndex& id){
+    out << id.idx << " = [" << id.f_idx << "." << id.t_idx << "]";
+    return out;
+}
+
+
+namespace flare{
 
 class Stream{
 	public:
@@ -111,7 +124,7 @@ class Stream{
 		std::cout << "   DeltaT = " << DeltaT << " days\n";
 		std::cout << "   tstep = " << tstep << " days\n";
 		std::cout << "   t_base = " << date_to_string(t_base) << "\n";
-		std::cout << "   current_index: " << current_index.idx << " = [" << current_index.f_idx << "." << current_index.t_idx << "]" << "\n";
+		std::cout << "   current_index: " << current_index << "\n";
 		std::cout << "   current_time: " << streamIdx_to_datestring(current_index) << "\n";
 		std::cout << "   files: \n";
 		for (int i=0; i<filenames.size(); ++i){

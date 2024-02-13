@@ -31,7 +31,8 @@ int main(){
 	
 	std::multimap<std::string, NcDim> dims_map = f.getDims();
 	cout << "dims in file: ";
-	for (auto p : dims_map) cout << p.first << " "; cout << endl;
+	for (auto p : dims_map) cout << p.first << " "; 
+	cout << endl;
 
 	cout << "NcVar lon has size = " << sizeof(NcVar) << " bytes" << endl;
 	
@@ -46,30 +47,34 @@ int main(){
 	vector <float> lons(dims[0].getSize());
 	lonVar.getVar(lons.data());
 	
-	string s;
-	lonVar.getAtt("units").getValues(s);
-	cout << "Lon units are: " << s << endl;
+	string unit;
+	lonVar.getAtt("units").getValues(unit);
+	cout << "Lon units are: " << unit << endl;
 	
 	multimap<string,NcVar> vars_map = f.getVars();
 	cout << "vars in file: ";
-	for (auto p : vars_map) cout << p.first << " "; cout << endl;
+	for (auto p : vars_map) cout << p.first << " "; 
+	cout << endl;
 	
 	map<string,NcGroup> coords_map_temp = f.getCoordVars();
 	cout << "coords in file: ";
-	for (auto p : coords_map_temp) cout << p.first << " "; cout << endl;
+	for (auto p : coords_map_temp) cout << p.first << " "; 
+	cout << endl;
 
 	map<string, NcVar> coords_map;
 	for (auto p : coords_map_temp){
 		coords_map[p.first] = p.second.getVar(p.first);
 	} 
 	cout << "coord vars obtained: ";
-	for (auto p : coords_map) cout << p.first << " "; cout << endl;
+	for (auto p : coords_map) cout << p.first << " "; 
+	cout << endl;
 
 	for (auto p : coords_map){
 		vars_map.erase(p.first);
 	}	
 	cout << "vars left after erasing coords: ";
-	for (auto p : vars_map) cout << p.first << " "; cout << endl;
+	for (auto p : vars_map) cout << p.first << " "; 
+	cout << endl;
 
 	vector <NcDim> var1_dims = vars_map.begin()->second.getDims();
 	vector<std::string> var1_dimnames;
@@ -88,13 +93,14 @@ int main(){
 	// auto it = std::find(var1_dimnames.begin(), var1_dimnames.end(), "time");
 	// *it = "time";
 
-	auto it = std::find(var1_dimnames.begin(), var1_dimnames.end(), "lat");
-	*it = "LAT";
+	auto itv = std::find(var1_dimnames.begin(), var1_dimnames.end(), "lat");
+	*itv = "LAT";
 
-	it = std::find(var1_dimnames.begin(), var1_dimnames.end(), "lon");
-	*it = "longitude";
+	itv = std::find(var1_dimnames.begin(), var1_dimnames.end(), "lon");
+	*itv = "longitude";
 	std::cout << "Modified dim names: ";
-	for (auto s : var1_dimnames) std::cout << s << " "; std::cout << "\n";
+	for (auto s : var1_dimnames) std::cout << s << " "; 
+	std::cout << "\n";
 
 	vector<std::string>   t_names_try = {"time"};
 	vector<std::string> lev_names_try = {"lev", "level", "z"};
@@ -117,7 +123,8 @@ int main(){
 	}
 
 	std::cout << "Standardized dim names: ";
-	for (auto s : var1_dimnames) std::cout << s << " "; std::cout << "\n";
+	for (auto s : var1_dimnames) std::cout << s << " "; 
+	std::cout << "\n";
 
 	int unlim_idx = -1;
 	for (int i=0; i<var1_dims.size(); ++i) if (var1_dims[i].isUnlimited()) unlim_idx = i; 

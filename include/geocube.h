@@ -48,9 +48,9 @@ class GeoCube : public Tensor<T> {
 		// Get basic variable attributes
 		// missing value
 		try{ ncvar.getAtt("missing_value").getValues(&this->missing_value);}
-		catch(netCDF::exceptions::NcException &e){
+		catch(netCDF::exceptions::NcException &e1){
 			try{ ncvar.getAtt("_FillValue").getValues(&this->missing_value);}
-			catch(netCDF::exceptions::NcException &e){ std::cout << "Missing/Fill value not found. Setting to NaN\n";}
+			catch(netCDF::exceptions::NcException &e2){ std::cout << "Missing/Fill value not found. Setting to NaN\n";}
 		}
 
 		// unit
@@ -83,7 +83,7 @@ class GeoCube : public Tensor<T> {
 
 	void init_stream(NcStream& ncstream, std::string varname = ""){
 		readMeta(ncstream.current_file, varname);
-		current_file_id = ncstream.current_file_index;
+		current_file_id = ncstream.current_index.f_idx;
 		streaming = true;
 		if (t_idx < 0) throw std::runtime_error("GeoCube: Stream files must have a time dimension\n");
 	}
@@ -163,11 +163,12 @@ class GeoCube : public Tensor<T> {
 		// TODO: Check whether sid is same as current index, and if so, skip reading
 
 		// if desired time is in not in current file, update file
-		if (ncstream.current_file_index != sid.f_idx){
+		if (ncstream.current_index.f_idx != sid.f_idx){
 			ncstream.update_file(sid.f_idx);
 		}
 
 		// if stream file has changed compared to the file last read in this->meta, update metadata
+		// TODO: This can be put in above condition after update_file()
 		if (current_file_id != sid.f_idx){
 			init_stream(ncstream, meta.name);
 		}
