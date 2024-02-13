@@ -12,15 +12,15 @@ int main(){
 	in_stream.print_meta();
 	in_stream.print_times();
 
-	in_stream.advance_to_time(flare::datestring_to_julian("2003-03-06"), true, false);
+	in_stream.advance_to_time(flare::datestring_to_julian("2003-03-06"));
 	in_stream.print_meta();
 	if (in_stream.current_index.idx != 14) return 1;
 
-	in_stream.advance_to_time(flare::datestring_to_julian("2004-01-06"), true, false);
+	in_stream.advance_to_time(flare::datestring_to_julian("2004-01-06"));
 	in_stream.print_meta();
 	if (in_stream.current_index.idx != 0) return 1;
 
-	in_stream.advance_to_time(flare::datestring_to_julian("2002-01-01"), true, false);
+	in_stream.advance_to_time(flare::datestring_to_julian("2002-01-01"));
 	in_stream.print_meta();
 	if (in_stream.current_index.idx != 23) return 1;
 
@@ -31,21 +31,21 @@ int main(){
 	double t0 = flare::datestring_to_julian("2002-1-1 00:00:00");
 	for (double t = t0; t < t0+15*12; t+=(365.2524/12)){
 		std::cout << flare::julian_to_datestring(t) << ": " 
-		          << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
+		          << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t)) << "\n";
 	}
 	std::cout << "\n";
 
 	std::cout << "Calculate time index with periodic l-edged t vector\n\n";
 	t0 = flare::datestring_to_julian("2005-06-11 00:00:00");
 	for (double t = t0; t < t0+20*12; t+=(365.2524/12)){
-		std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
+		std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t)) << "\n";
 	}
 	std::cout << "\n";
 
 	std::cout << "Calculate time index with periodic l-edged t vector\n\n";
 	t0 = flare::datestring_to_julian("2002-1-2 00:00:00");
 	for (double t = t0; t > t0-15*12; t-=(365.2524/12)){
-		std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t, true, false)) << "\n";
+		std::cout << flare::julian_to_datestring(t) << ": " << in_stream.streamIdx_to_datestring(in_stream.julian_to_indices(t)) << "\n";
 	}
 	std::cout << "\n";
 	}

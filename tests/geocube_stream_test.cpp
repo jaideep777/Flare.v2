@@ -3,6 +3,9 @@
 int main(){
 
 	flare::NcStream in_stream;
+	in_stream.periodic = true;
+	in_stream.centered_t = true;
+
 	in_stream.open({"tests/data/gpp.2000-2015.nc"});
 	in_stream.current_file.printMeta();
 
@@ -17,7 +20,7 @@ int main(){
 
 	v.setCoordBounds(v.lat_idx, 18.5, 18.5);
 	v.setCoordBounds(v.lon_idx, 77.25, 77.25);
-	v.streamBlock(in_stream, flare::datestring_to_julian("2003-01-05 00:00:00"), true, true);
+	v.streamBlock(in_stream, flare::datestring_to_julian("2003-01-05 00:00:00"));
 	v.print(true);
 
 

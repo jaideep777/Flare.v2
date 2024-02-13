@@ -117,9 +117,10 @@ class CsvStream : public Stream{
 		csvin >> current_row; 
 	}
 
-	inline void advance_to_time(double j, bool periodic, bool centered_t) override {
+
+	inline void advance_to_time(double j) override {
 		// get index to read
-		StreamIndex new_idx = julian_to_indices(j, periodic, centered_t);
+		StreamIndex new_idx = julian_to_indices(j);
 		std::cout << "advance from " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
 		
 		// Skip reading if new index is not different from current

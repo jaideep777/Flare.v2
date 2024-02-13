@@ -46,7 +46,9 @@ namespace flare{
 
 class Stream{
 	public:
-	StreamIndex current_index;    ///< Index of current record.
+	StreamIndex current_index;  ///< Index of current record.
+	bool periodic = true;       ///< Should time points be traversed cyclically? Otherwise, index will be clamped at the ends when time points go out of range
+	bool centered_t = false;    ///< Do time points represent centre of the interval? If false, they will represent start of the interval
 
 	protected:
 	std::vector<std::string> filenames; ///< Names of files containing temporal data.
@@ -124,6 +126,8 @@ class Stream{
 		std::cout << "   DeltaT = " << DeltaT << " days\n";
 		std::cout << "   tstep = " << tstep << " days\n";
 		std::cout << "   t_base = " << date_to_string(t_base) << "\n";
+		std::cout << "   periodic: " << (periodic? "yes":"no") << '\n';
+		std::cout << "   time points represent: " << (centered_t? "center of interal":"start of interval") << '\n';
 		std::cout << "   current_index: " << current_index << "\n";
 		std::cout << "   current_time: " << streamIdx_to_datestring(current_index) << "\n";
 		std::cout << "   files: \n";
@@ -134,7 +138,7 @@ class Stream{
 
 	inline void print_times(){
 		auto f = std::cout.flags();
-		std::cout << "         t\tidx\tf_idx\tt_idx\tpretty t\n"; // << times << '\n';
+		std::cout << "   times:\n         t\tidx\tf_idx\tt_idx\tpretty t\n"; // << times << '\n';
 		for (int i=0; i<times.size(); ++i){
 			std::cout << std::fixed << std::setw(10) << std::setprecision(4) 
 					  << times[i] << '\t' << i << "\t" << file_indices[i] << '\t' << t_indices[i] << '\t' << julian_to_datestring(date_to_julian(t_base) + times[i]) << '\n';
@@ -149,13 +153,13 @@ class Stream{
 	/// @param periodic   whether data should be extended periodically
 	/// @param centred_t  whether t at index represents centre of interval (if true) or start of interval (if false)
 	/// @return           index in the stream for which data should be read
-	inline StreamIndex julian_to_indices(double j, bool periodic, bool centred_t){
+	inline StreamIndex julian_to_indices(double j){
 
 		// convert desired time to file unit (days since tbase)
 		double t = j - date_to_julian(t_base); 
 		// std::cout << "t in file units = " << t << "\n";
 
-		if (centred_t) t += tstep/2;     //   |----0----|-----1----|----2----|---
+		if (centered_t) t += tstep/2;    //   |----0----|-----1----|----2----|---
 		                                 //   x--->0    |     1    | shift t (x) by half the interval size
 		                                 //   |    x--->0     1    |    2
 		                                 //   |    0  x--->0  1    |    2
@@ -188,7 +192,7 @@ class Stream{
 	/// @param n The number of indices to advance, negative to go backwards.
 	/// @param periodic Whether index should move cyclically. Otherwise, it will be clamped at 0 and max.
 	/// @return The StreamIndex after advancement.
-	inline StreamIndex advance(const StreamIndex& sid, int n, bool periodic){
+	inline StreamIndex advance(const StreamIndex& sid, int n){
 		StreamIndex sid_next;
 
 		if (periodic) sid_next.idx = utils::positive_mod(int(sid.idx) + n, times.size());
@@ -200,8 +204,8 @@ class Stream{
 	}
 
 
-	inline virtual void advance_to_time(double j, bool periodic, bool centered_t){
-		current_index = julian_to_indices(j, periodic, centered_t);
+	inline virtual void advance_to_time(double j){
+		current_index = julian_to_indices(j);
 	} 
 
 

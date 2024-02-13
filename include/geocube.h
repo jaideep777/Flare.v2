@@ -158,8 +158,8 @@ class GeoCube : public Tensor<T> {
 		ncvar.getVar(starts, counts, strides, this->vec.data());
 	}
 
-	void streamBlock(NcStream& ncstream, double julian_day, bool periodic, bool centred_t){
-		StreamIndex sid = ncstream.julian_to_indices(julian_day, periodic, centred_t);
+	void streamBlock(NcStream& ncstream, double julian_day){
+		StreamIndex sid = ncstream.julian_to_indices(julian_day);
 		// TODO: Check whether sid is same as current index, and if so, skip reading
 
 		// if desired time is in not in current file, update file
