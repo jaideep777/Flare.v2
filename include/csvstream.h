@@ -56,12 +56,12 @@ std::istream& operator>>(std::istream& str, CSVRow& data){
 
 class CsvStream : public Stream{
 	private:
-	int t_id = -1;
-	std::ifstream csvin;
+	int t_id = -1;        ///< index at which time column exists in file
+	std::ifstream csvin;  ///< Input stream to read CSV file
 
 	public:
-	std::vector<std::string> colnames;
-	CSVRow current_row;
+	std::vector<std::string> colnames;  ///< Column names in csv file
+	CSVRow current_row;                 ///< Last read row
 
 	public:
 
@@ -69,7 +69,6 @@ class CsvStream : public Stream{
 		Stream::print_meta();
 		std::cout << "   colnames: " << colnames << '\n';
 		std::cout << "   t_id: " << t_id << '\n';
-		std::cout << "   current_idx: " << current_index.idx << " / " << current_index.f_idx << "." << current_index.t_idx << '\n';
 	}
 
 	inline void reset() override{
@@ -79,7 +78,7 @@ class CsvStream : public Stream{
 		colnames.clear();
 	}
 
-	/// @brief Specializatin of Stream::open() for NetCDF files
+	/// @brief Specializatin of Stream::open() for CSV files
 	/// @param _filenames list of files to stream from
 	inline void open(std::vector<std::string> _filenames, std::string _tunit_str){
 		reset();

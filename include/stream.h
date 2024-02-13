@@ -34,22 +34,22 @@ struct StreamIndex{
 class Stream{
 	public:
 	StreamIndex current_index;    ///< Index of current record.
-	// double current_time;       ///< Current time.
 
 	protected:
 	std::vector<std::string> filenames; ///< Names of files containing temporal data.
 
-	std::vector<double> times;        ///< combined times vector concatenated from all files
+	// These 4 time indexing vectors must be filled during "open()" calls in all derived classes
+	std::vector<double> times;        ///< combined times vector concatenated from all files [unit: days since t_base]
 	std::vector<size_t> file_indices; ///< For each t = times[i], this stores the index of the file which contains t
 	std::vector<size_t> t_indices;    ///< For each t = times[i], this stores the index within the file's time vector that corresponds to t
 	std::vector<size_t> idx_f0;       ///< full index corresponding to the first entry in file. Used for convenience
 
 	std::string unit_str;   ///< full string representation of time unit (e.g., "days since yyyy-mm-dd hh:mm:ss")
-	std::string tunit = ""; ///< time unit in file (e.g., "days" or "months")
+	std::string tunit = ""; ///< time unit in file (e.g., "days", "months", etc)
 	double tstep = 0;       ///< interval between data frames [days] 
-	double tscale = 1;      ///< multiplier to convert time from file's unit to 'days'
+	double tscale = 1;      ///< multiplier to convert time intervals from file's unit to 'days'
 	std::tm t_base = {};    ///< epoch (base time) used in file
-	double DeltaT = 0;      ///< Total duration represented in combined times vector
+	double DeltaT = 0;      ///< total duration represented in combined times vector
 
 	std::vector<std::string> tnames = {"time", "t"}; ///< Names to try when searcing for the time dimension in file
 
@@ -58,10 +58,10 @@ class Stream{
 	}
 
 	inline virtual void reset(){
+		filenames.clear();
 		times.clear();
 		file_indices.clear();
 		t_indices.clear();
-		filenames.clear();
 		idx_f0.clear();
 	}
 
@@ -111,7 +111,7 @@ class Stream{
 		std::cout << "   DeltaT = " << DeltaT << " days\n";
 		std::cout << "   tstep = " << tstep << " days\n";
 		std::cout << "   t_base = " << date_to_string(t_base) << "\n";
-		std::cout << "   current_index: " << current_index.idx << "[" << current_index.f_idx << "." << current_index.t_idx << "]" << "\n";
+		std::cout << "   current_index: " << current_index.idx << " = [" << current_index.f_idx << "." << current_index.t_idx << "]" << "\n";
 		std::cout << "   current_time: " << streamIdx_to_datestring(current_index) << "\n";
 		std::cout << "   files: \n";
 		for (int i=0; i<filenames.size(); ++i){
@@ -196,8 +196,8 @@ class Stream{
 
 	inline void parse_time_unit(std::string tunit_str){
 		// treat "decimal year" as "years since 0000-01-00 0:0:0". 
-		// - Seems weird but works!
-		// - Note, using "years since 0000-01-01" adds an extra day, 
+		// - This base date seems weird but works!
+		// - using "years since 0000-01-01" adds an extra day, 
 		//       perhaps because over 2000 years (0001-2000) all leap days cancel out, 
 		//       but 0000 is a leap year so adds an extra day
 		if (tunit_str == "decimal year") tunit_str = "years since 0000-01-00 0:0:0";
