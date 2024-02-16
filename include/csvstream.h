@@ -11,15 +11,23 @@
 namespace flare{
 
 class CsvStream : public Stream{
-	private:
-	int t_id = -1;        ///< index at which time column exists in file
-	std::ifstream csvin;  ///< Input stream to read CSV file
+	protected:
+	int t_id = -1;          ///< index at which time column exists in file
+	const bool store_data;  ///< This stream stores data
 
 	public:
 	std::vector<std::string> colnames;  ///< Column names in csv file
+	std::vector<CSVRow> data;           ///< data rows read from the csv files
 	CSVRow current_row;                 ///< Last read row
 
+	protected:
+	inline CsvStream(bool _store_data) : store_data(_store_data){
+	}
+
 	public:
+	// CsvStream constructor sets store_data to true
+	inline CsvStream() : CsvStream(true){
+	}
 
 	inline void print_meta() override{
 		Stream::print_meta();
@@ -27,11 +35,20 @@ class CsvStream : public Stream{
 		std::cout << "   t_id: " << t_id << '\n';
 	}
 
+	inline void print_values(){
+		std::cout << "time\t" << colnames << '\n';
+		if (!store_data) return;
+		for (int i=0; i<data.size(); ++i){
+			std::cout << times[i] << '\t' << data[i] << '\n';
+		}
+	}
+
 	inline void reset() override{
 		Stream::reset();
 		current_index.set(0,0,0);
 		t_id = -1;
 		colnames.clear();
+		data.clear();
 	}
 
 	/// @brief Specializatin of Stream::open() for CSV files
@@ -51,7 +68,7 @@ class CsvStream : public Stream{
 			// read header
 			CSVRow row;
 			fin >> row;
-			// store header only from 1st row
+			// store header only from 1st row of first file
 			if (i_file == 0){
 				for (int i=0; i<row.size(); ++i){
 					colnames.push_back(row[i]);
@@ -74,6 +91,7 @@ class CsvStream : public Stream{
 			int line_num = 0;
 			while(fin >> row){
 				times.push_back(std::stod(row[t_id]));
+				if (store_data) data.emplace_back(row);
 				file_indices.push_back(i_file);
 				t_indices.push_back(line_num);
 				++line_num;
@@ -96,27 +114,7 @@ class CsvStream : public Stream{
 			DeltaT = times[times.size()-1] - times[0] + tstep;
 		}
 
-		// open first file
-		update_file(0);
-
 	}
-
-	inline void update_file(size_t file_id){
-		csvin.close();
-		csvin.open(filenames[file_id]);
-		if (!csvin) throw std::runtime_error("Could not open file: "+filenames[file_id]);
-
-		csvin >> current_row; // skip header
-		std::cout << " -- update_file(): header row: " << current_row.get_line_raw() << '\n';
-
-		// set current index to first data entry in the file
-		current_index.set(idx_f0[file_id], file_id, 0);
-		std::cout << " -- updating file, index to --> " << current_index.f_idx << "." << current_index.t_idx << '\n';
-
-		// Since data from current index must already be in current_row, read first data entry from file
-		csvin >> current_row; 
-	}
-
 
 	inline void advance_to_time(double j) override {
 		// get index to read
@@ -126,20 +124,7 @@ class CsvStream : public Stream{
 		// Skip reading if new index is not different from current
 		if (current_index == new_idx) return;
 
-		// update file if 
-		//    a) file index has changed
-		//    b) new idx < current idx (since ifstream cannot go backwards)
-		if (current_index.f_idx != new_idx.f_idx ||
-		    current_index.idx > new_idx.idx){
-			update_file(new_idx.f_idx);
-		}
-
-		std::cout << " -- advancing: " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
-		// consume rows until we hit new_index
-		for (int i=current_index.t_idx; i<new_idx.t_idx; ++i){
-			csvin >> current_row;
-			std::cout << "   -- " << current_row.get_line_raw() << "\n";
-		}
+		current_row = data[new_idx.idx];
 		current_index = new_idx;
 	}
 };

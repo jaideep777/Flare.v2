@@ -1,9 +1,11 @@
 #include "csvstream.h"
+#include "csvstream_lazy.h"
 using namespace std;
 
-int main(){
+template <class STREAM>
+int test(){
 
-	flare::CsvStream in_stream;
+	STREAM in_stream;
 	in_stream.periodic = true;
 	in_stream.centered_t = false;
 
@@ -14,6 +16,7 @@ int main(){
 	                }, "decimal year");
 	in_stream.print_meta();
 	in_stream.print_times();
+	in_stream.print_values();
 
 	in_stream.advance_to_time(flare::datestring_to_julian("2013-06-01 0:0:0"));
 	in_stream.print_meta();
@@ -35,7 +38,7 @@ int main(){
 
 	// **** Test whether decimal year as unit works for random odd date ****
 
-	flare::CsvStream in_stream1;
+	STREAM in_stream1;
 
 	in_stream1.set_tname("Year");
 	in_stream1.open({"tests/data/CO2_AMB_AmzFACE1951-1953.csv"}, 
@@ -53,3 +56,13 @@ int main(){
 	return 0;
 }
 
+int main(){
+
+	cout << "-------------- CSV Stream ---------------\n\n";
+	int res1 = test<flare::CsvStream>();
+
+	cout << "----------- Lazy CSV Stream ---------------\n\n";
+	int res2 = test<flare::LazyCsvStream>();
+
+	return res1+res2;
+}

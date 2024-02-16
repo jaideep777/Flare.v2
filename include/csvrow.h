@@ -56,4 +56,11 @@ inline std::istream& operator>>(std::istream& str, flare::CSVRow& data){
     return str;
 }   
 
+inline std::ostream& operator<<(std::ostream& os, flare::CSVRow& data){
+    for (size_t i=0; i<data.size(); ++i){
+		os << data[i] << '\t';
+	}
+    return os;
+}   
+
 #endif

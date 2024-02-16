@@ -1,9 +1,11 @@
 #include "csvstream.h"
+#include "csvstream_lazy.h"
 using namespace std;
 
 // to verify, run tests/Rscripts/csvstream_periodic_extension_test_analysis.R
 
-int main(){
+template<class STREAM>
+int test(string outfile){
 
 	flare::CsvStream in_stream;
 	in_stream.periodic = true;
@@ -21,7 +23,7 @@ int main(){
 	for (int i=0; i<in_stream.current_row.size(); ++i) cout << in_stream.current_row[i] << "\t";
 	cout << '\n';
 	
-	ofstream fout("csvstream_met.txt");
+	ofstream fout(outfile.c_str());
 	double t0 = flare::datestring_to_julian("1921-01-04");
 	double tf = flare::datestring_to_julian("2081-12-31");
 	for (double t = t0; t <= tf; t += 365.2425/12.0/1.0){
@@ -34,5 +36,16 @@ int main(){
 
 	
 	return 0;
+}
+
+int main(){
+
+	cout << "-------------- CSV Stream ---------------\n\n";
+	int res1 = test<flare::CsvStream>("csvstream_met.txt");
+
+	cout << "----------- Lazy CSV Stream ---------------\n\n";
+	int res2 = test<flare::LazyCsvStream>("csvstream_lazy_met.txt");
+
+	return res1+res2;	
 }
 

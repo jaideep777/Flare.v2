@@ -12,6 +12,8 @@
 // mon = 0-11. So add 1 for gday calculations
 // mday = 1-31
 
+// Reference: https://xkcd.com/2867/
+
 namespace flare{
 
 inline bool isLeapYear(int year){
