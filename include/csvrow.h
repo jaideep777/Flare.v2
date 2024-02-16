@@ -49,8 +49,6 @@ class CSVRow{
 	}
 };
 
-}
-
 inline std::istream& operator>>(std::istream& str, flare::CSVRow& data){
     data.readNextRow(str);
     return str;
@@ -62,5 +60,7 @@ inline std::ostream& operator<<(std::ostream& os, flare::CSVRow& data){
 	}
     return os;
 }   
+
+}
 
 #endif

@@ -32,17 +32,13 @@ class StreamIndex{
     }
 };
 
-} // namespace flare
-
 // Note: this needs to be defined outside namespace flare, othwerise it masks globally defined <<, e.g. in csvstream.h
 //       see: https://stackoverflow.com/questions/5195512/namespaces-and-operator-resolution
+// But now all operators are moved to inside flare namespace so its okay.
 inline std::ostream& operator<<(std::ostream& out, const flare::StreamIndex& id){
     out << id.idx << " = [" << id.f_idx << "." << id.t_idx << "]";
     return out;
 }
-
-
-namespace flare{
 
 class Stream{
 	public:
