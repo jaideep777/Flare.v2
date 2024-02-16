@@ -12,7 +12,7 @@ int test(string outfile){
 	in_stream.centered_t = false;
 
 	in_stream.open({"tests/data/MetData_AmzFACE_Monthly_2000_2015_PlantFATE.csv"}, 
-					"decimal year");
+					"years CE");
 	in_stream.print_meta();
 	in_stream.print_times();
 

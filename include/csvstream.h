@@ -114,6 +114,7 @@ class CsvStream : public Stream{
 			DeltaT = times[times.size()-1] - times[0] + tstep;
 		}
 
+		if (store_data) current_row = data[0];
 	}
 
 	inline void advance_to_time(double j) override {

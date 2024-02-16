@@ -212,12 +212,12 @@ class Stream{
 	protected:
 
 	inline void parse_time_unit(std::string tunit_str){
-		// treat "decimal year" as "years since 0000-01-00 0:0:0". 
+		// treat "years CE" as "years since 0000-01-00 0:0:0". 
 		// - This base date seems weird but works!
 		// - using "years since 0000-01-01" adds an extra day, 
 		//       perhaps because over 2000 years (0001-2000) all leap days cancel out, 
 		//       but 0000 is a leap year so adds an extra day
-		if (tunit_str == "decimal year") tunit_str = "years since 0000-01-00 0:0:0";
+		if (tunit_str == "years CE") tunit_str = "years since 0000-01-00 0:0:0";
 
 		// parse time units
 		std::string since;

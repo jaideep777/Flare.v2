@@ -13,7 +13,7 @@ int test(){
 	in_stream.open({"tests/data/CO2_AMB_AmzFACE2000_2010.csv",
 	                "tests/data/CO2_AMB_AmzFACE2011_2020.csv",
 					"tests/data/CO2_AMB_AmzFACE2021_2030.csv",
-	                }, "decimal year");
+	                }, "years CE");
 	in_stream.print_meta();
 	in_stream.print_times();
 	in_stream.print_values();
@@ -36,13 +36,13 @@ int test(){
 	cout << '|' << in_stream.current_row.get_line_raw() << '|' << endl;
 	if (in_stream.current_row.get_line_raw() != "2029,414.2") return 1;
 
-	// **** Test whether decimal year as unit works for random odd date ****
+	// **** Test whether "years CE" as unit works for random odd date ****
 
 	STREAM in_stream1;
 
 	in_stream1.set_tname("Year");
 	in_stream1.open({"tests/data/CO2_AMB_AmzFACE1951-1953.csv"}, 
-	                "decimal year");
+	                "years CE");
 	in_stream1.print_meta();
 	in_stream1.print_times();
 

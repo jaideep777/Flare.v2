@@ -137,6 +137,15 @@ inline double decimal_year(std::tm time_point){
 	return time_point.tm_year + 1900 + time_point.tm_yday/days_in_yr;
 }
 
+inline double julian_to_yearsCE(double j){
+	return (j - datestring_to_julian("0000-01-00 0:0:0"))/365.2425; 
+}
+
+inline double yearsCE_to_julian(double years_ce){
+	return datestring_to_julian("0000-01-00 0:0:0") + years_ce*365.2425; 
+}
+
+
 } // namespace flare
 
 

@@ -29,6 +29,7 @@ int main(){
 		"2988-07-01 12:00:00",
 		"0000-03-01 12:00:00",
 		"0000-03-01 00:00:00"
+		// "0000-01-00 00:00:00"
 		// "-2000-03-01 00:00:00",
 		// "-4172-11-24 12:00:00"
 	};
@@ -41,6 +42,7 @@ int main(){
 		2812587.00000,
 		1721120.00000,
 		1721119.50000
+		// 1721059.50000
 	};
 
 	vector<std::tm> dates;
@@ -84,6 +86,11 @@ int main(){
 			return 1;
 		}
 	}
+
+	cout << "Julian @ 2000.00 = " << setprecision(12) << flare::yearsCE_to_julian(2000) << '\n';
+	cout << "years CE @ 2000.00 = " << flare::julian_to_yearsCE(flare::yearsCE_to_julian(2000)) << '\n';
+	if (fabs(flare::yearsCE_to_julian(2000) - 2451544.5) > 1e-6) return 1;
+	if (fabs(flare::julian_to_yearsCE(flare::yearsCE_to_julian(2000))- 2000)>1e-6) return 1;
 
 	cout << "-----------------\n";
 	cout << "All tests PASSED!\n";
