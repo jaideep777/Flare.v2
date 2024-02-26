@@ -64,6 +64,8 @@ class Stream{
 
 	std::vector<std::string> tnames = {"time", "t"}; ///< Names to try when searcing for the time dimension in file
 
+	bool debug = false;
+
 	public:
 	inline virtual ~Stream(){
 	}

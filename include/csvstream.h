@@ -14,7 +14,7 @@ class CsvStream : public Stream{
 	protected:
 	int t_id = -1;          ///< index at which time column exists in file
 	const bool store_data;  ///< This stream stores data
-
+	
 	public:
 	std::vector<std::string> colnames;  ///< Column names in csv file
 	std::vector<CSVRow> data;           ///< data rows read from the csv files
@@ -120,7 +120,7 @@ class CsvStream : public Stream{
 	inline void advance_to_time(double j) override {
 		// get index to read
 		StreamIndex new_idx = julian_to_indices(j);
-		std::cout << "advance from " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
+		if (debug) std::cout << "advance from " << current_index.f_idx << "." << current_index.t_idx << " --> " << new_idx.f_idx << "." << new_idx.t_idx << '\n';
 		
 		// Skip reading if new index is not different from current
 		if (current_index == new_idx) return;
