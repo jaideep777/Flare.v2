@@ -12,8 +12,8 @@ namespace flare{
 
 class CsvStream : public Stream{
 	protected:
-	int t_id = -1;          ///< index at which time column exists in file
-	const bool store_data;  ///< This stream stores data
+	int t_id = -1;    ///< index at which time column exists in file
+	bool store_data;  ///< Whether this stream stores data
 	
 	public:
 	std::vector<std::string> colnames;  ///< Column names in csv file
