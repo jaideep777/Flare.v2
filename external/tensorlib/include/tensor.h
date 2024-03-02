@@ -65,11 +65,11 @@
  
  */
 
-template <class T>
-std::ostream& operator << (std::ostream& os, const std::vector<T>& vec){
-	for (auto v : vec) os << v << ' ';
-	return os;
-}
+// template <class T>
+// std::ostream& operator << (std::ostream& os, const std::vector<T>& vec){
+// 	for (auto v : vec) os << v << ' ';
+// 	return os;
+// }
 
 template <class T>
 class Tensor{
